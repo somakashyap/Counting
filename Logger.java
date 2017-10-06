@@ -5,15 +5,8 @@
  */
 package counting;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.logging.Level;
 
 /**
  *
@@ -21,58 +14,31 @@ import java.util.logging.Level;
  */
 public class Logger {
 
-    private static final int BUFFER_NUM = 1000;
-    private ArrayList loggingItemList;
+    private int BUFFER_NUM;
+    private ArrayList<LoggingItem> loggingItemList;
         
-    Logger (){
-        loggingItemList = new ArrayList();
+    Logger (int bufferSize){
+        loggingItemList = new ArrayList<>();
+        BUFFER_NUM = bufferSize;
         
     }
     
-    private LoggingItem getLeaseFrequentItem(){
-        LoggingItem leaseFrequentItem = (LoggingItem)loggingItemList.get(0);
-        int leastFrequency = leaseFrequentItem.getFrequency();
-        for (int i = 1; i < loggingItemList.size(); i++){
-            LoggingItem item = (LoggingItem)loggingItemList.get(i);
-            if (item.getFrequency() < leastFrequency){
-                leastFrequency = item.getFrequency();
-                leaseFrequentItem = item;
-            }
-        }
-        return (leaseFrequentItem);
-    }
-    private String getStringFormatFromList(ArrayList list){
-        String ret = "";
-        for (int i = 0; i < list.size(); i++){
-            LoggingItem item = (LoggingItem)list.get(i);
-            int number = item.getNumber();
-            ret = ret + String.valueOf(number) + " ";
+    public void updateLogger (int num){
         
+        // if list is null
+        if (loggingItemList == null){
+            return;
         }
-        return (ret);
-    }
-    
-    private void printLoggingList(){
-        String str = "";
-        for (int i = 0; i < loggingItemList.size(); i++){
-            LoggingItem item = (LoggingItem)loggingItemList.get(i);
-            str = str + "(" + String.valueOf(item.getNumber()) + " , " + String.valueOf(item.getFrequency()) + ")";
-            
-        }
-        System.out.println(str);
-    }
-    
-    private void updateList(int number){
         // if list is empty
-        if (loggingItemList == null || loggingItemList.isEmpty()){
-            LoggingItem item = new LoggingItem(number, 1);
+        if (loggingItemList.isEmpty()){
+            LoggingItem item = new LoggingItem(num, 1);
             loggingItemList.add(item);
             return;
         }
-        else if (loggingItemList.size() == 1000){
-            // remove the  element with least frequency
-            LoggingItem leaseFrequentItem = getLeaseFrequentItem();
-            boolean remove = loggingItemList.remove(leaseFrequentItem);
+        else if (loggingItemList.size() == BUFFER_NUM){
+            // remove the  element with least count
+            LoggingItem leastFrequentItem = getLeastCountItem();
+            boolean remove = loggingItemList.remove(leastFrequentItem);
             if (remove == false){
                 throw new UnsupportedOperationException("List is full not able to remove item");
             }
@@ -80,50 +46,31 @@ public class Logger {
         // find if this number already present
         boolean present = false;
         for (int i = 0; i < loggingItemList.size(); i++){
-            LoggingItem item = (LoggingItem)loggingItemList.get(i);
-            if (item.getNumber() == number){
-                item.setFrequency(item.getFrequency() + 1);
+            LoggingItem item = loggingItemList.get(i);
+            if (item.getNumber() == num){
+                item.incrementCount(1);
                 present = true;
             }
         }
         if (present == false){
-            LoggingItem item = new LoggingItem(number, 1);
+            LoggingItem item = new LoggingItem(num, 1);
             loggingItemList.add(item);
         }
         
-        
-    }
-    void updateLogger (InputStream stream) throws NullPointerException, IOException{
-        if (stream == null){
-            throw new NullPointerException("Stream is null");
-        }
-        InputStreamReader inputStreamReader = new InputStreamReader(stream, StandardCharsets.UTF_8);
-        BufferedReader in = new BufferedReader(inputStreamReader);
-        
-        try {
-            String num = in.readLine();
-            //System.out.println(" The number read is : " + num);
-            // update the list
-            updateList (Integer.parseInt(num));
-        } catch (IOException ex) {
-            throw new IOException("I/O exception");
-        }
     }
     
     
-    String getMostFrequentNumbers(int count){
+    ArrayList<Integer> getFrequentNumbers(int count){
         
-        String ret = null;
+        ArrayList<Integer> retList = new ArrayList<>();
         if (loggingItemList == null || loggingItemList.isEmpty()){
             System.out.println("List is empty or not defined!");
-            return (ret);
+            return (retList);
             
         }
-        
         else if (count > loggingItemList.size()){
             System.out.println("Data is less than asked for! Returning the complete list.");
-            ret = getStringFormatFromList(loggingItemList);
-            return (ret);
+            count = loggingItemList.size();
         }
         
         // sort the list in descending order
@@ -132,14 +79,35 @@ public class Logger {
         System.out.println ("The complete list is :");
         printLoggingList();
         
-        // get the count number of elements from list and return in string
-        ArrayList list = new ArrayList();
+        // get the count number of elements from list 
         for (int i = 0; i < count; i++){
-            LoggingItem item = (LoggingItem)loggingItemList.get(i);
-            list.add(item);
+            LoggingItem item = loggingItemList.get(i);
+            retList.add(item.getNumber());
         }
-        
-        ret = getStringFormatFromList(list);
-        return (ret);
+        return retList;
+    }
+    
+    private LoggingItem getLeastCountItem(){
+        LoggingItem leastFrequentItem = loggingItemList.get(0);
+        int leastFrequency = leastFrequentItem.getCount();
+        for (int i = 1; i < loggingItemList.size(); i++){
+            LoggingItem item = loggingItemList.get(i);
+            if (item.getCount() < leastFrequency){
+                leastFrequency = item.getCount();
+                leastFrequentItem = item;
+            }
+        }
+        return leastFrequentItem;
+    }
+    
+    
+    private void printLoggingList(){
+        String str = "";
+        for (int i = 0; i < loggingItemList.size(); i++){
+            LoggingItem item = (LoggingItem)loggingItemList.get(i);
+            str = str + "(" + String.valueOf(item.getNumber()) + " , " + String.valueOf(item.getCount()) + ")";
+            
+        }
+        System.out.println(str);
     }
 }

@@ -14,29 +14,33 @@ import java.util.Comparator;
 public class LoggingItem implements Comparator{
 
     private int number;
-    private int frequency;
+    private int count;
 
     LoggingItem(){
         number = 0;
-        frequency = 0;
+        count = 0;
     }
         
     LoggingItem (int n, int f){
         number = n;
-        frequency = f;
+        count = f;
     }
     public void setNumber(int n) { number = n; }
     public int getNumber() { return number; }
-    public void setFrequency(int f) { frequency = f;}
-    public int getFrequency() { return frequency; }
+    public void setCount(int c) { count = c;}
+    public int getCount() { return count; }
+    
+    public void incrementCount(int inc){
+        
+        count = count + inc;
+    }
 
     @Override
     public int compare(Object t, Object t1) {
         LoggingItem item1 = (LoggingItem)t;
         LoggingItem item2 = (LoggingItem)t1;
         
-        // do we need to check obejct conversion here ?
-        return (item2.getFrequency() - item1.getFrequency());
+        return(Integer.compare(item2.getCount(), item1.getCount()));
        
     }
 }
